@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Megaloto · Reporte Completo · Meta Ads</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --g900:#071a10;--g800:#0d2b1e;--g700:#14402c;--g600:#1a5438;
+  --g500:#226846;--g400:#2d8a5e;--g300:#4db87e;--g200:#86d4a8;
+  --g100:#c2edda;--g50:#eaf7f1;
+  --lime:#b3f06a;--amber:#f5c842;--red:#f07070;
+  --white:#f5fdf8;--muted:#4a7060;--border:rgba(45,138,94,0.18);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--g900);color:var(--white);overflow-x:hidden;}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 52px;
+  background:rgba(7,26,16,0.92);backdrop-filter:blur(14px);
+  border-bottom:0.5px solid var(--border);
+}
+.tbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:var(--lime);}
+.tbar-tabs{display:flex;gap:4px;}
+.tab-btn{
+  font-size:12px;font-weight:500;padding:6px 18px;border-radius:20px;
+  border:0.5px solid transparent;background:transparent;color:var(--g300);
+  cursor:pointer;transition:all .2s;letter-spacing:0.04em;
+}
+.tab-btn.active{background:rgba(179,240,106,0.12);color:var(--lime);border-color:rgba(179,240,106,0.35);}
+.tab-btn:hover:not(.active){background:rgba(255,255,255,0.05);color:var(--white);}
+.tbar-dots{display:flex;gap:7px;align-items:center;}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--g600);cursor:pointer;border:none;transition:.2s;}
+.ndot.active{background:var(--lime);}
+
+/* ── TAB PANELS ── */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ── SLIDES ── */
+.slide{
+  min-height:100vh;padding:96px 80px 80px;
+  display:flex;flex-direction:column;justify-content:center;
+  border-bottom:0.5px solid var(--border);
+  position:relative;overflow:hidden;
+  opacity:0;transform:translateY(18px);
+  transition:opacity .45s ease,transform .45s ease;
+}
+.slide.visible{opacity:1;transform:none;}
+.slide-dark{background:var(--g800);}
+.slide-mid{background:var(--g900);}
+
+.bg-glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 75% 55% at 72% 28%,rgba(45,138,94,0.2) 0%,transparent 68%);}
+.bg-grid{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(45,138,94,0.05) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(45,138,94,0.05) 1px,transparent 1px);
+  background-size:48px 48px;}
+
+.slide-num{position:absolute;top:96px;right:80px;font-size:11px;color:var(--g500);letter-spacing:.1em;}
+.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);font-weight:500;margin-bottom:12px;}
+.stitle{font-family:'Syne',sans-serif;font-weight:700;font-size:clamp(26px,3.5vw,46px);line-height:1.08;margin-bottom:10px;}
+.sdesc{font-size:14px;color:var(--g200);max-width:700px;line-height:1.75;margin-bottom:36px;font-weight:300;}
+
+/* ── KPI CARDS ── */
+.kc{background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:14px;padding:18px 20px;transition:background .2s;}
+.kc:hover{background:rgba(255,255,255,0.07);}
+.kc.hi{background:rgba(179,240,106,0.08);border-color:rgba(179,240,106,0.28);}
+.kc.warn{background:rgba(245,200,66,0.07);border-color:rgba(245,200,66,0.25);}
+.kc.al{background:rgba(240,112,112,0.07);border-color:rgba(240,112,112,0.22);}
+.kc.dk{background:var(--g800);border-color:var(--g600);}
+.kl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px;}
+.kb{font-size:12px;color:var(--g400);margin-bottom:2px;}
+.kv{font-family:'Syne',sans-serif;font-weight:700;font-size:28px;line-height:1;margin-bottom:6px;}
+.kv.lime{color:var(--lime);}.kv.red{color:var(--red);}.kv.amb{color:var(--amber);}.kv.sm{font-size:20px;}
+.ks{font-size:11px;color:var(--g400);}
+
+.delta{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;}
+.du{background:rgba(179,240,106,0.14);color:var(--lime);}
+.dd{background:rgba(240,112,112,0.14);color:var(--red);}
+.dw{background:rgba(245,200,66,0.14);color:var(--amber);}
+.dn{background:rgba(255,255,255,0.08);color:var(--g200);}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+
+/* ── DIVIDERS ── */
+.divider{height:0.5px;background:var(--border);margin:24px 0;}
+.sdiv{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+.sdiv-line{flex:1;height:0.5px;background:var(--border);}
+.sdiv-label{font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+
+/* ── CHART BOX ── */
+.chart-box{background:rgba(255,255,255,0.03);border:0.5px solid var(--border);border-radius:14px;padding:20px;}
+.chart-lbl{font-size:11px;color:var(--g300);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;}
+
+/* ── INSIGHT CARDS ── */
+.ins-card{border-left:2px solid var(--lime);padding-left:18px;margin-bottom:20px;}
+.ins-card.r{border-left-color:var(--red);}
+.ins-num{font-family:'Syne',sans-serif;font-size:11px;color:var(--lime);font-weight:700;margin-bottom:6px;}
+.ins-num.r{color:var(--red);}
+.ins-text{font-size:14px;color:var(--g100);line-height:1.65;}
+.ins-text strong{color:var(--white);font-weight:500;}
+
+/* ── ALERT BANNER ── */
+.alert-banner{display:flex;gap:14px;align-items:flex-start;
+  background:rgba(245,200,66,0.07);border:0.5px solid rgba(245,200,66,0.28);
+  border-radius:12px;padding:16px 18px;margin-bottom:28px;}
+.alert-icon{width:20px;height:20px;background:rgba(245,200,66,0.2);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+  font-size:11px;font-weight:700;color:var(--amber);}
+.alert-text{font-size:13px;color:var(--g100);line-height:1.65;}
+.alert-text strong{color:var(--amber);font-weight:500;}
+
+/* ── TAGS ── */
+.tag{display:inline-block;font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;}
+.tag-lime{background:rgba(179,240,106,0.12);color:var(--lime);border:0.5px solid rgba(179,240,106,0.3);}
+.tag-green{background:rgba(77,184,126,0.15);color:var(--g300);border:0.5px solid rgba(77,184,126,0.3);}
+.tag-muted{background:rgba(255,255,255,0.06);color:var(--g200);border:0.5px solid var(--border);}
+.tag-new{background:rgba(179,240,106,0.12);color:var(--lime);border:0.5px solid rgba(179,240,106,0.3);}
+.tag-old{background:rgba(134,212,168,0.1);color:var(--g300);border:0.5px solid rgba(134,212,168,0.25);}
+
+/* ── BARS ── */
+.bar-group{margin-bottom:14px;}
+.bar-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--g200);margin-bottom:6px;}
+.bar-track{height:6px;background:rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:10px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px;}
+.bar-name{min-width:90px;color:var(--g200);font-size:11px;}
+.bar-val{min-width:48px;text-align:right;color:var(--white);font-size:11px;font-weight:500;}
+
+/* ── CREATIVE CARDS ── */
+.cc{background:var(--g800);border:0.5px solid var(--g600);border-radius:14px;padding:18px 20px;}
+.cc.new{border-color:rgba(179,240,106,0.3);background:rgba(179,240,106,0.05);}
+.cc-name{font-size:12px;font-weight:500;color:var(--white);margin-bottom:4px;}
+.cc-concept{font-size:11px;color:var(--g400);font-style:italic;margin-bottom:12px;}
+.cc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cc-m-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:2px;}
+.cc-m-val{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;}
+
+/* ── FOOTER ── */
+footer{padding:30px 80px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.ft-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:var(--g500);}
+.ft-note{font-size:11px;color:var(--g600);}
+
+@media(max-width:900px){
+  .slide{padding:80px 28px 60px;}
+  .g4,.g3{grid-template-columns:1fr 1fr;}
+  .g2{grid-template-columns:1fr;}
+  .topbar{padding:0 20px;}
+  .tbar-dots{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOP BAR ══ -->
+<div class="topbar">
+  <div class="tbar-logo">MEGALOTO</div>
+  <div class="tbar-tabs">
+    <button class="tab-btn active" onclick="switchTab('landing')">Landings · AWA</button>
+    <button class="tab-btn" onclick="switchTab('creativos')">Creativos · one-activos</button>
+  </div>
+  <div class="tbar-dots" id="dotsContainer">
+    <button class="ndot active" onclick="goSlide(0)"></button>
+    <button class="ndot" onclick="goSlide(1)"></button>
+    <button class="ndot" onclick="goSlide(2)"></button>
+    <button class="ndot" onclick="goSlide(3)"></button>
+    <button class="ndot" onclick="goSlide(4)"></button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PESTAÑA 1 — LANDINGS
+══════════════════════════════════════════ -->
+<div class="tab-panel active" id="panel-landing">
+
+<!-- S1 COVER -->
+<section class="slide" id="L0" style="justify-content:flex-end;padding-bottom:100px;">
+  <div class="bg-glow"></div><div class="bg-grid"></div>
+  <div style="position:relative;z-index:1;">
+    <p class="eyebrow">Análisis comparativo · Mar 2026</p>
+    <h1 class="stitle">Impacto del<br>cambio de <span style="color:var(--lime);">landing</span><br>en campañas AWA</h1>
+    <p class="sdesc">Evaluación del comportamiento de tráfico antes y después del ajuste de landing page en las campañas de Tráfico y Video Views.</p>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;">Período antes</div><div style="font-size:13px;color:var(--g100);font-weight:500;">Mar 1 – Mar 19, 2026</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;">Período después</div><div style="font-size:13px;color:var(--g100);font-weight:500;">Mar 20 – Abr 8, 2026</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;">Campañas</div><div style="font-size:13px;color:var(--g100);font-weight:500;">trafico-awa · videoviews-awa</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- S2 PANORAMA -->
+<section class="slide slide-dark" id="L1">
+  <span class="slide-num">02 / 05</span>
+  <p class="eyebrow">Panorama general</p>
+  <h2 class="stitle">Métricas de tráfico<br>después del cambio</h2>
+  <p class="sdesc">Período Mar 20 – Abr 8, 2026 · Solo campañas con nueva landing activa</p>
+  <div class="g4" style="margin-bottom:32px;">
+    <div class="kc hi"><div class="kl">LPV totales</div><div class="kv lime">40,527</div><div class="delta du">↑ +273% vs antes</div></div>
+    <div class="kc"><div class="kl">Clics totales</div><div class="kv">57,069</div><div class="delta du">↑ +281% vs antes</div></div>
+    <div class="kc"><div class="kl">CTR promedio</div><div class="kv sm">2.30%</div><div class="delta du">↑ desde 1.75%</div></div>
+    <div class="kc"><div class="kl">Inversión total</div><div class="kv sm">$2,550</div><div class="delta dn">+87% vs antes</div></div>
+  </div>
+  <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Distribución por campaña</div><div class="sdiv-line"></div></div>
+  <div class="g2">
+    <div>
+      <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;">trafico-awa</span><span class="tag tag-lime">Tráfico</span></div>
+      <div class="bar-group"><div class="bar-lbl"><span>LPV</span><span>39,472 (97.4%)</span></div><div class="bar-track"><div class="bar-fill" style="width:97.4%;background:var(--lime);"></div></div></div>
+      <div class="bar-group"><div class="bar-lbl"><span>Clics</span><span>54,760 (96%)</span></div><div class="bar-track"><div class="bar-fill" style="width:96%;background:var(--g300);"></div></div></div>
+      <div class="bar-group"><div class="bar-lbl"><span>Inversión</span><span>$1,449 (56.8%)</span></div><div class="bar-track"><div class="bar-fill" style="width:56.8%;background:var(--g400);"></div></div></div>
+    </div>
+    <div>
+      <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;">videoviews-awa</span><span class="tag tag-muted">Video Views</span></div>
+      <div class="bar-group"><div class="bar-lbl"><span>LPV</span><span>1,055 (2.6%)</span></div><div class="bar-track"><div class="bar-fill" style="width:2.6%;background:var(--lime);"></div></div></div>
+      <div class="bar-group"><div class="bar-lbl"><span>Clics</span><span>2,309 (4%)</span></div><div class="bar-track"><div class="bar-fill" style="width:4%;background:var(--g300);"></div></div></div>
+      <div class="bar-group"><div class="bar-lbl"><span>Inversión</span><span>$1,102 (43.2%)</span></div><div class="bar-track"><div class="bar-fill" style="width:43.2%;background:var(--g400);"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- S3 TRAFICO -->
+<section class="slide slide-mid" id="L2">
+  <span class="slide-num">03 / 05</span>
+  <p class="eyebrow">Campaña · Tráfico</p>
+  <h2 class="stitle">trafico-awa<br><span style="color:var(--lime);">Antes vs. Después</span></h2>
+  <p class="sdesc">Objetivo: Landing Page · La campaña con mayor impacto positivo del cambio</p>
+  <div class="g3" style="margin-bottom:28px;">
+    <div class="kc hi"><div class="kl">CTR (link clicks)</div><div class="kb">Antes: 3.37%</div><div class="kv lime">4.35%</div><div class="delta du">↑ +29%</div></div>
+    <div class="kc hi"><div class="kl">Landing page views</div><div class="kb">Antes: 10,218</div><div class="kv lime">39,472</div><div class="delta du">↑ +286%</div></div>
+    <div class="kc"><div class="kl">Costo por LPV</div><div class="kb">Antes: $0.031</div><div class="kv sm">$0.037</div><div class="delta dn">+19% leve alza</div></div>
+  </div>
+  <div class="g2">
+    <div class="chart-box">
+      <div class="chart-lbl">Clics y LPV — antes vs. después</div>
+      <div style="position:relative;height:200px;"><canvas id="L-traficoBar" role="img" aria-label="Clics y LPV trafico-awa antes vs después."></canvas></div>
+    </div>
+    <div>
+      <div class="g2" style="margin-bottom:16px;">
+        <div class="kc dk"><div class="kl">Clics antes</div><div class="kv sm" style="color:var(--g300);">13,927</div></div>
+        <div class="kc hi"><div class="kl">Clics después</div><div class="kv sm lime">54,760</div></div>
+        <div class="kc dk"><div class="kl">Clic→LPV antes</div><div class="kv sm" style="color:var(--g300);">73.4%</div></div>
+        <div class="kc hi"><div class="kl">Clic→LPV después</div><div class="kv sm lime">72.1%</div></div>
+      </div>
+      <div class="ins-card"><div class="ins-num">✦ Insight clave</div><div class="ins-text">El tráfico se <strong>multiplicó por 4x</strong> mientras la tasa clic→LPV se mantuvo estable (~72%), confirmando que la nueva landing <strong>no genera fricción</strong>.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- S4 VIDEO -->
+<section class="slide slide-dark" id="L3">
+  <span class="slide-num">04 / 05</span>
+  <p class="eyebrow">Campaña · Video Views</p>
+  <h2 class="stitle">videoviews-awa<br><span style="color:var(--lime);">Antes vs. Después</span></h2>
+  <p class="sdesc">Objetivo: Video Views · Tráfico a landing es secundario — el algoritmo prioriza reproducciones</p>
+  <div class="g3" style="margin-bottom:28px;">
+    <div class="kc hi"><div class="kl">CTR (link clicks)</div><div class="kb">Antes: 0.13%</div><div class="kv lime">0.24%</div><div class="delta du">↑ +85%</div></div>
+    <div class="kc hi"><div class="kl">Landing page views</div><div class="kb">Antes: 528</div><div class="kv lime">1,055</div><div class="delta du">↑ +100%</div></div>
+    <div class="kc"><div class="kl">Costo por LPV</div><div class="kb">Antes: $0.65</div><div class="kv sm red">$1.04</div><div class="delta dd">↑ +60% más caro</div></div>
+  </div>
+  <div class="g2">
+    <div class="chart-box">
+      <div class="chart-lbl">CTR y $/LPV — antes vs. después</div>
+      <div style="position:relative;height:200px;"><canvas id="L-videoChart" role="img" aria-label="CTR y costo LPV videoviews-awa antes vs después."></canvas></div>
+    </div>
+    <div>
+      <div class="g2" style="margin-bottom:16px;">
+        <div class="kc dk"><div class="kl">Inversión antes</div><div class="kv sm" style="color:var(--g300);">$344</div></div>
+        <div class="kc dk"><div class="kl">Inversión después</div><div class="kv sm red">$1,102</div></div>
+        <div class="kc dk"><div class="kl">Clic→LPV antes</div><div class="kv sm" style="color:var(--g300);">40.1%</div></div>
+        <div class="kc hi"><div class="kl">Clic→LPV después</div><div class="kv sm lime">45.7%</div></div>
+      </div>
+      <div class="ins-card r"><div class="ins-num r">⚠ Punto de atención</div><div class="ins-text">El <strong>costo por LPV subió 60%</strong> porque Meta destinó presupuesto a reproducciones, no a clics. La landing <strong>no puede compensar el objetivo del algoritmo</strong>.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- S5 INSIGHTS LANDING -->
+<section class="slide slide-mid" id="L4" style="padding-bottom:120px;">
+  <span class="slide-num">05 / 05</span>
+  <p class="eyebrow">Conclusiones y recomendaciones</p>
+  <h2 class="stitle">Insights principales</h2>
+  <p class="sdesc">Síntesis del comportamiento de tráfico en ambas campañas con nueva landing · Mar 2026</p>
+  <div class="g2">
+    <div>
+      <div class="ins-card"><div class="ins-num">01 · Resultado destacado</div><div class="ins-text"><strong>trafico-awa responde mejor al cambio.</strong> CTR +29%, LPV ×4 y tasa clic→LPV estable en 72% — la nueva landing no genera abandono.</div></div>
+      <div class="ins-card"><div class="ins-num">02 · Contexto</div><div class="ins-text">El alza de $/LPV en trafico-awa ($0.031→$0.037) <strong>es marginal</strong> dado el volumen ganado. Sigue siendo el más bajo de todas las campañas activas.</div></div>
+      <div class="ins-card"><div class="ins-num">03 · Señal mixta</div><div class="ins-text"><strong>videoviews-awa duplicó LPV</strong> pero el costo subió 60% — no es problema de la landing, es el objetivo del algoritmo.</div></div>
+      <div class="ins-card r"><div class="ins-num r">04 · Recomendación</div><div class="ins-text">Para maximizar tráfico a la landing, concentrar inversión en <strong>trafico-awa</strong>. videoviews sostenible para awareness, no para volumen de LPV.</div></div>
+    </div>
+    <div>
+      <div class="chart-box" style="margin-bottom:16px;">
+        <div class="chart-lbl">Costo por LPV — antes → después</div>
+        <div style="position:relative;height:190px;"><canvas id="L-cplLine" role="img" aria-label="Evolución $/LPV antes vs después."></canvas></div>
+      </div>
+      <div class="g2">
+        <div class="kc hi"><div class="kl">trafico-awa $/LPV</div><div class="kv lime" style="font-size:24px;">$0.037</div><div class="ks">Más eficiente de todas</div></div>
+        <div class="kc dk"><div class="kl">videoviews $/LPV</div><div class="kv sm red">$1.044</div><div class="ks">No optimizado para LPV</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="ft-logo">MEGALOTO · Meta Ads · Landings AWA</div><div class="ft-note">Mar 1 – Abr 8, 2026 · Antes: Mar 1–19 · Después: Mar 20–Abr 8</div></footer>
+</div><!-- /panel-landing -->
+
+
+<!-- ══════════════════════════════════════════
+     PESTAÑA 2 — CREATIVOS
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-creativos">
+
+<!-- C1 COVER -->
+<section class="slide" id="C0" style="justify-content:flex-end;padding-bottom:100px;">
+  <div class="bg-glow"></div><div class="bg-grid"></div>
+  <div style="position:relative;z-index:1;max-width:780px;">
+    <p class="eyebrow">Campaña one-activos · Meta Ads · Mar – Abr 2026</p>
+    <h1 class="stitle">Nuevo keyvisual<br><span style="color:var(--lime);">momentos que sueñas</span><br>vs creativos anteriores</h1>
+    <p class="sdesc">Comparativo entre el nuevo concepto creativo (Santorini · Brindis) y los estáticos de lifestyle anteriores (Spa · Playa · Depa) en la campaña de conversión para jugadores activos.</p>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;">
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;">Período</div><div style="font-size:13px;color:var(--g100);font-weight:500;">Mar 1 – Abr 10, 2026</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;">Objetivo</div><div style="font-size:13px;color:var(--g100);font-weight:500;">Conversión · Apuestas</div></div>
+      <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;">Audiencia</div><div style="font-size:13px;color:var(--g100);font-weight:500;">Jugadores activos de lotería</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- C2 CONTEXTO -->
+<section class="slide slide-dark" id="C1">
+  <span class="slide-num">02 / 05</span>
+  <p class="eyebrow">Contexto del análisis</p>
+  <h2 class="stitle">¿Qué estamos<br>comparando?</h2>
+  <p class="sdesc">La campaña rota creativos dos veces por semana con cada juego. El nuevo keyvisual mantiene el mensaje pero cambia el concepto visual hacia momentos aspiracionales.</p>
+  <div class="alert-banner">
+    <div class="alert-icon">!</div>
+    <div class="alert-text"><strong>Dato importante:</strong> Santorini y Brindis acumulan <strong>2,024 impresiones combinadas</strong> vs <strong>1,890,422</strong> de los anteriores. Son señales tempranas — se necesitan 3 a 5 juegos más para validar.</div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Nuevo keyvisual</div><div class="sdiv-line"></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="cc new">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span class="tag tag-new">Nuevo</span><span style="font-size:10px;color:var(--g400);">Desde 01-04-2026</span></div>
+          <div class="cc-name">estatico_santorini_</div><div class="cc-concept">Vacaciones en Grecia · vida de ensueño</div>
+          <div class="cc-metrics">
+            <div><div class="cc-m-lbl">Impresiones</div><div class="cc-m-val" style="color:var(--lime);">572</div></div>
+            <div><div class="cc-m-lbl">CTR</div><div class="cc-m-val" style="color:var(--lime);">1.05%</div></div>
+            <div><div class="cc-m-lbl">Costo/result.</div><div class="cc-m-val" style="color:var(--lime);">$0.21</div></div>
+            <div><div class="cc-m-lbl">Conversiones</div><div class="cc-m-val" style="color:var(--lime);">3</div></div>
+          </div>
+        </div>
+        <div class="cc new">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span class="tag tag-new">Nuevo</span><span style="font-size:10px;color:var(--g400);">Desde 01-04-2026</span></div>
+          <div class="cc-name">estatico_brindis_</div><div class="cc-concept">Celebración · brindis con champagne</div>
+          <div class="cc-metrics">
+            <div><div class="cc-m-lbl">Impresiones</div><div class="cc-m-val" style="color:var(--amber);">1,452</div></div>
+            <div><div class="cc-m-lbl">CTR</div><div class="cc-m-val" style="color:var(--amber);">0.90%</div></div>
+            <div><div class="cc-m-lbl">Costo/result.</div><div class="cc-m-val" style="color:var(--red);">$1.96</div></div>
+            <div><div class="cc-m-lbl">Conversiones</div><div class="cc-m-val" style="color:var(--amber);">1</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Grupo de referencia</div><div class="sdiv-line"></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="cc">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span class="tag tag-old">Anterior</span><span style="font-size:10px;color:var(--g400);">Formato equivalente</span></div>
+          <div class="cc-name">estatico_spa_ / playa_ / depa_</div><div class="cc-concept">Lugares de lujo · estilo de vida aspiracional</div>
+          <div class="cc-metrics">
+            <div><div class="cc-m-lbl">Impresiones</div><div class="cc-m-val" style="color:var(--g300);">322,054</div></div>
+            <div><div class="cc-m-lbl">CTR prom.</div><div class="cc-m-val" style="color:var(--g300);">1.09%</div></div>
+            <div><div class="cc-m-lbl">Costo/result.</div><div class="cc-m-val" style="color:var(--g300);">$1.11</div></div>
+            <div><div class="cc-m-lbl">Conversiones</div><div class="cc-m-val" style="color:var(--g300);">755</div></div>
+          </div>
+        </div>
+        <div class="kc dk" style="padding:14px 18px;">
+          <div class="kl">Mejor performer global</div>
+          <div class="cc-name" style="margin-bottom:4px;">video (michelin + mariae)</div>
+          <div class="cc-metrics">
+            <div><div class="cc-m-lbl">CTR</div><div class="cc-m-val" style="color:var(--amber);font-size:14px;">2.63%</div></div>
+            <div><div class="cc-m-lbl">Costo/result.</div><div class="cc-m-val" style="color:var(--amber);font-size:14px;">$0.43</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- C3 COMPARATIVA -->
+<section class="slide" id="C2">
+  <span class="slide-num">03 / 05</span>
+  <p class="eyebrow">Comparativa directa</p>
+  <h2 class="stitle">Nuevo keyvisual vs<br><span style="color:var(--lime);">estáticos anteriores</span></h2>
+  <p class="sdesc">Métricas de los nuevos creativos frente al promedio del grupo comparable (spa · playa · depa).</p>
+  <div class="g4" style="margin-bottom:28px;">
+    <div class="kc hi"><div class="kl">CTR · santorini</div><div class="kv lime">1.05%</div><div class="ks">Anterior: 1.09%</div><div style="margin-top:6px;"><span class="delta dn">−0.04pp</span></div></div>
+    <div class="kc warn"><div class="kl">CTR · brindis</div><div class="kv amb">0.90%</div><div class="ks">Anterior: 1.09%</div><div style="margin-top:6px;"><span class="delta dd">−0.19pp</span></div></div>
+    <div class="kc hi"><div class="kl">$/result. · santorini</div><div class="kv lime">$0.21</div><div class="ks">Anterior: $1.11</div><div style="margin-top:6px;"><span class="delta du">−81%</span></div></div>
+    <div class="kc al"><div class="kl">$/result. · brindis</div><div class="kv red">$1.96</div><div class="ks">Anterior: $1.11</div><div style="margin-top:6px;"><span class="delta dd">Solo 1 conv.</span></div></div>
+  </div>
+  <div class="g2">
+    <div class="chart-box">
+      <div class="chart-lbl">CTR por formato (Mar–Abr)</div>
+      <div style="position:relative;height:240px;"><canvas id="C-ctrChart" role="img" aria-label="CTR comparativo por formato de creativo."></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-lbl">Costo por conversión por formato</div>
+      <div style="position:relative;height:240px;"><canvas id="C-cprChart" role="img" aria-label="Costo por resultado comparativo."></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- C4 RANKING -->
+<section class="slide slide-dark" id="C3">
+  <span class="slide-num">04 / 05</span>
+  <p class="eyebrow">Ranking de eficiencia</p>
+  <h2 class="stitle">Posición del nuevo<br><span style="color:var(--lime);">dentro del portafolio</span></h2>
+  <p class="sdesc">Todos los tipos de creativo activos en la campaña, ordenados por CTR y costo por resultado.</p>
+  <div class="g2">
+    <div>
+      <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Ranking por CTR</div><div class="sdiv-line"></div></div>
+      <div class="bar-row"><span class="bar-name" style="color:var(--amber);">video</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--amber);"></div></div><span class="bar-val" style="color:var(--amber);">2.63%</span></div>
+      <div class="bar-row"><span class="bar-name">texto1</span><div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--g300);"></div></div><span class="bar-val">1.53%</span></div>
+      <div class="bar-row"><span class="bar-name">texto</span><div class="bar-track"><div class="bar-fill" style="width:55.9%;background:var(--g300);"></div></div><span class="bar-val">1.47%</span></div>
+      <div class="bar-row"><span class="bar-name">depa</span><div class="bar-track"><div class="bar-fill" style="width:50.6%;background:var(--g400);"></div></div><span class="bar-val">1.33%</span></div>
+      <div class="bar-row"><span class="bar-name" style="color:var(--lime);font-weight:500;">santorini ★</span><div class="bar-track"><div class="bar-fill" style="width:39.9%;background:var(--lime);"></div></div><span class="bar-val" style="color:var(--lime);">1.05%</span></div>
+      <div class="bar-row"><span class="bar-name">spa</span><div class="bar-track"><div class="bar-fill" style="width:41.1%;background:var(--g400);"></div></div><span class="bar-val">1.08%</span></div>
+      <div class="bar-row"><span class="bar-name">carrusel</span><div class="bar-track"><div class="bar-fill" style="width:38%;background:var(--g500);"></div></div><span class="bar-val">1.00%</span></div>
+      <div class="bar-row"><span class="bar-name" style="color:var(--amber);">brindis ★</span><div class="bar-track"><div class="bar-fill" style="width:34.2%;background:var(--amber);"></div></div><span class="bar-val" style="color:var(--amber);">0.90%</span></div>
+      <div class="bar-row"><span class="bar-name">playa</span><div class="bar-track"><div class="bar-fill" style="width:33.8%;background:var(--g600);"></div></div><span class="bar-val">0.89%</span></div>
+    </div>
+    <div>
+      <div class="sdiv"><div class="sdiv-line"></div><div class="sdiv-label">Ranking $/conversión (menor = mejor)</div><div class="sdiv-line"></div></div>
+      <div class="bar-row"><span class="bar-name" style="color:var(--lime);font-weight:500;">santorini ★</span><div class="bar-track"><div class="bar-fill" style="width:10.7%;background:var(--lime);"></div></div><span class="bar-val" style="color:var(--lime);">$0.21</span></div>
+      <div class="bar-row"><span class="bar-name" style="color:var(--amber);">video</span><div class="bar-track"><div class="bar-fill" style="width:21.9%;background:var(--amber);"></div></div><span class="bar-val" style="color:var(--amber);">$0.43</span></div>
+      <div class="bar-row"><span class="bar-name">texto1</span><div class="bar-track"><div class="bar-fill" style="width:22.4%;background:var(--g300);"></div></div><span class="bar-val">$0.44</span></div>
+      <div class="bar-row"><span class="bar-name">carrusel</span><div class="bar-track"><div class="bar-fill" style="width:35.2%;background:var(--g400);"></div></div><span class="bar-val">$0.69</span></div>
+      <div class="bar-row"><span class="bar-name">spa</span><div class="bar-track"><div class="bar-fill" style="width:43.9%;background:var(--g500);"></div></div><span class="bar-val">$0.86</span></div>
+      <div class="bar-row"><span class="bar-name">depa</span><div class="bar-track"><div class="bar-fill" style="width:53.6%;background:var(--g600);"></div></div><span class="bar-val">$1.05</span></div>
+      <div class="bar-row"><span class="bar-name">texto</span><div class="bar-track"><div class="bar-fill" style="width:71.4%;background:var(--g600);"></div></div><span class="bar-val">$1.40</span></div>
+      <div class="bar-row"><span class="bar-name">playa</span><div class="bar-track"><div class="bar-fill" style="width:99%;background:var(--red);"></div></div><span class="bar-val" style="color:var(--red);">$1.94</span></div>
+      <div class="bar-row"><span class="bar-name" style="color:var(--amber);">brindis ★</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--red);"></div></div><span class="bar-val" style="color:var(--red);">$1.96</span></div>
+    </div>
+  </div>
+  <div style="margin-top:18px;padding:14px 18px;background:rgba(255,255,255,0.03);border-radius:10px;border:0.5px solid var(--border);">
+    <div style="font-size:11px;color:var(--g400);margin-bottom:5px;">★ Nuevos creativos · Nota de muestra</div>
+    <div style="font-size:12px;color:var(--g200);line-height:1.6;">El <strong style="color:var(--lime);">$0.21 de santorini</strong> se basa en 3 conversiones. El <strong style="color:var(--amber);">$1.96 de brindis</strong> en 1 sola. Ambos necesitan más exposición para confirmar el patrón.</div>
+  </div>
+</section>
+
+<!-- C5 INSIGHTS CREATIVOS -->
+<section class="slide" id="C4" style="padding-bottom:120px;">
+  <span class="slide-num">05 / 05</span>
+  <p class="eyebrow">Insights y recomendaciones</p>
+  <h2 class="stitle">¿Qué hace el<br><span style="color:var(--lime);">nuevo keyvisual?</span></h2>
+  <p class="sdesc">Síntesis del desempeño inicial del nuevo concepto y próximos pasos para validación.</p>
+  <div class="g2">
+    <div>
+      <div class="ins-card"><div class="ins-num">01</div><div class="ins-text"><strong>El CTR del nuevo concepto es competitivo.</strong> Santorini logra 1.05% — casi igual al histórico de los lifestyle anteriores (1.09%). No hay rechazo en la audiencia.</div></div>
+      <div class="ins-card"><div class="ins-num">02</div><div class="ins-text"><strong>La señal de conversión de santorini es prometedora.</strong> $0.21 por resultado es el mejor de toda la campaña, incluso mejor que el video ($0.43). Pero son solo 3 conversiones — señal de potencial, no resultado confirmado.</div></div>
+      <div class="ins-card" style="border-left-color:var(--amber);"><div class="ins-num" style="color:var(--amber);">03</div><div class="ins-text"><strong>Brindis necesita más tiempo.</strong> 1 sola conversión no permite ningún juicio. CTR dentro de rango razonable para un creativo nuevo sin optimización acumulada.</div></div>
+      <div class="ins-card r"><div class="ins-num r">04</div><div class="ins-text"><strong>El video sigue siendo el formato más fuerte</strong> con CTR 2.63% y $0.43/resultado. Es la barra de referencia alta para cualquier estático.</div></div>
+      <div class="ins-card"><div class="ins-num">05</div><div class="ins-text"><strong>Recomendación:</strong> Mantener ambos creativos 4–6 juegos más sin pausar. Con 10,000–15,000 impresiones por creativo se podrá evaluar con solidez estadística.</div></div>
+    </div>
+    <div>
+      <div class="chart-box" style="margin-bottom:16px;">
+        <div class="chart-lbl">Volumen — nuevo vs anterior lifestyle</div>
+        <div style="position:relative;height:180px;"><canvas id="C-impChart" role="img" aria-label="Comparativo de impresiones nuevo vs anterior."></canvas></div>
+      </div>
+      <div class="g2">
+        <div class="kc hi"><div class="kl">Veredicto santorini</div><div class="kv lime" style="font-size:16px;">Seguir</div><div class="ks" style="margin-top:4px;">Señales positivas · validar con volumen</div></div>
+        <div class="kc warn"><div class="kl">Veredicto brindis</div><div class="kv amb" style="font-size:16px;">Observar</div><div class="ks" style="margin-top:4px;">Sin datos suficientes · no pausar aún</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="ft-logo">MEGALOTO · one-activos · Meta Ads</div><div class="ft-note">Mar 1 – Abr 10, 2026 · Campaña de conversión · Jugadores activos</div></footer>
+</div><!-- /panel-creativos -->
+
+
+<script>
+const LIME='#b3f06a',GREEN='#4db87e',GREEN2='#2d8a5e',AMBER='#f5c842',RED='#f07070';
+const TICK='#4a7060',GRID='rgba(255,255,255,0.05)';
+
+let activeTab = 'landing';
+let chartsInit = { landing: false, creativos: false };
+
+function buildLandingCharts(){
+  if(chartsInit.landing) return;
+  chartsInit.landing = true;
+  new Chart(document.getElementById('L-traficoBar'),{type:'bar',data:{labels:['Clics antes','Clics después','LPV antes','LPV después'],datasets:[{data:[13927,54760,10218,39472],backgroundColor:[GREEN2,LIME,GREEN2,LIME],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:TICK,font:{size:10}},grid:{display:false},border:{color:'transparent'}},y:{ticks:{color:TICK,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v},grid:{color:GRID},border:{color:'transparent'}}}}});
+  new Chart(document.getElementById('L-videoChart'),{type:'bar',data:{labels:['CTR','$/LPV'],datasets:[{label:'Antes',data:[0.13,0.65],backgroundColor:GREEN2,borderRadius:6},{label:'Después',data:[0.24,1.04],backgroundColor:[LIME,RED],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:TICK,font:{size:11}},grid:{display:false},border:{color:'transparent'}},y:{ticks:{color:TICK,font:{size:10},callback:v=>v.toFixed(2)},grid:{color:GRID},border:{color:'transparent'}}}}});
+  new Chart(document.getElementById('L-cplLine'),{type:'line',data:{labels:['Antes (Mar 1–19)','Después (Mar 20–Abr 8)'],datasets:[{label:'trafico-awa',data:[0.031,0.037],borderColor:LIME,backgroundColor:'rgba(179,240,106,0.1)',borderWidth:2,pointBackgroundColor:LIME,pointRadius:6,tension:0.3,fill:true},{label:'videoviews-awa',data:[0.65,1.04],borderColor:RED,backgroundColor:'rgba(240,112,112,0.07)',borderWidth:2,pointBackgroundColor:RED,pointRadius:6,borderDash:[5,4],tension:0.3,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{color:TICK,font:{size:11},boxWidth:12,padding:14,usePointStyle:true}}},scales:{x:{ticks:{color:TICK,font:{size:10}},grid:{color:GRID},border:{color:'transparent'}},y:{ticks:{color:TICK,font:{size:10},callback:v=>'$'+v.toFixed(2)},grid:{color:GRID},border:{color:'transparent'}}}}});
+}
+
+function buildCreativosCharts(){
+  if(chartsInit.creativos) return;
+  chartsInit.creativos = true;
+  const labs=['video','texto1','texto','depa','santorini','spa','carrusel','brindis','playa'];
+  const cols=[AMBER,GREEN,GREEN2,GREEN2,LIME,GREEN2,GREEN2,AMBER,RED];
+  new Chart(document.getElementById('C-ctrChart'),{type:'bar',data:{labels:labs,datasets:[{data:[2.63,1.53,1.47,1.33,1.05,1.08,1.00,0.90,0.89],backgroundColor:cols,borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:TICK,font:{size:10},callback:v=>v+'%'},grid:{color:GRID},border:{color:'transparent'}},y:{ticks:{color:TICK,font:{size:10}},grid:{display:false},border:{color:'transparent'}}}}});
+  new Chart(document.getElementById('C-cprChart'),{type:'bar',data:{labels:labs,datasets:[{data:[0.43,0.44,1.40,1.05,0.21,0.86,0.69,1.96,1.94],backgroundColor:cols,borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:TICK,font:{size:10},callback:v=>'$'+v.toFixed(2)},grid:{color:GRID},border:{color:'transparent'}},y:{ticks:{color:TICK,font:{size:10}},grid:{display:false},border:{color:'transparent'}}}}});
+  new Chart(document.getElementById('C-impChart'),{type:'doughnut',data:{labels:['Anteriores (spa+playa+depa)','Nuevo santorini','Nuevo brindis'],datasets:[{data:[322054,572,1452],backgroundColor:[GREEN2,LIME,AMBER],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{color:TICK,font:{size:10},boxWidth:10,padding:12,usePointStyle:true}}},cutout:'65%'}});
+}
+
+function switchTab(tab){
+  activeTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+  updateDots(tab);
+  if(tab==='landing') buildLandingCharts();
+  else buildCreativosCharts();
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(()=>setupObserver(tab),100);
+}
+
+function updateDots(tab){
+  const count = tab==='landing' ? 5 : 5;
+  const dc = document.getElementById('dotsContainer');
+  dc.innerHTML='';
+  for(let i=0;i<count;i++){
+    const b=document.createElement('button');
+    b.className='ndot'+(i===0?' active':'');
+    b.onclick=()=>goSlide(i);
+    dc.appendChild(b);
+  }
+}
+
+function goSlide(i){
+  const prefix = activeTab==='landing' ? 'L' : 'C';
+  const el = document.getElementById(prefix+i);
+  if(el) el.scrollIntoView({behavior:'smooth'});
+}
+
+function setupObserver(tab){
+  const prefix = tab==='landing' ? 'L' : 'C';
+  const slides = document.querySelectorAll('#panel-'+tab+' .slide');
+  const dots   = document.querySelectorAll('#dotsContainer .ndot');
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+        const i=[...slides].indexOf(e.target);
+        dots.forEach((d,j)=>d.classList.toggle('active',j===i));
+      }
+    });
+  },{threshold:0.25});
+  slides.forEach(s=>obs.observe(s));
+}
+
+buildLandingCharts();
+setupObserver('landing');
+</script>
+</body>
+</html>
